@@ -1,0 +1,3 @@
+[submodule "deps/xg"]
+	path = deps/xg
+	url = https://github.com/vgteam/xg.git
