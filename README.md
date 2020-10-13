@@ -7,7 +7,7 @@ Retrieve basic statistics from a pan-genome graph (in GFA format) by comparing p
 ## Dependencies
 
 ```
-sudo apt-get install build-essential git protobuf-compiler libprotoc-dev libhts-dev
+sudo apt-get install build-essential git protobuf-compiler libprotoc-dev libhts-dev libjansson-dev
 ```
 ## Build
 

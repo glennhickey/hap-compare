@@ -32,14 +32,14 @@ ifeq ($(shell uname -s),Darwin)
     endif
 endif
 
-CXXFLAGS := -O3 -Werror=return-type -std=c++14 -ggdb -g -MMD -MP $(PARALLEL_FLAGS) $(CXXFLAGS)
+CXXFLAGS := -O0 -Werror=return-type -std=c++14 -ggdb -g -MMD -MP $(PARALLEL_FLAGS) $(CXXFLAGS)
 
 XG_DIR = $(CWD)/deps/xg
 LIBVGIO_DIR = $(CWD)/deps/libvgio
 
 LIB_DEPS = $(LIB_DIR)/libxg.a $(LIB_DIR)/libvgio.a
 
-LIB_FLAGS = -lxg -lvgio -lsdsl -lhandlegraph -ldivsufsort -ldivsufsort64 -latomic -lhts -lprotoc -lprotobuf -L$(CWD)/$(LIB_DIR) 
+LIB_FLAGS = -lxg -lvgio -lsdsl -lhandlegraph -ldivsufsort -ldivsufsort64 -latomic -lhts -lprotoc -lprotobuf -ljansson -L$(CWD)/$(LIB_DIR) 
 INC_FLAGS = -I$(CWD)/$(INC_DIR)
 
 all : bin/pg-pathcomp venv/bin/activate
@@ -66,7 +66,7 @@ $(LIB_DIR)/libvgio.a: $(LIBVGIO_DIR)/src/*.cpp
 pg-pathcomp.o:$(LIB_DEPS) pg-pathcomp.hpp pg-pathcomp.cpp
 	$(CXX) $(INCLUDE_FLAGS) $(CXXFLAGS) $(CPPFLAGS) -c pg-pathcomp.cpp $(INC_FLAGS)
 
-main.o:$(LIB_DEPS) main.cpp
+main.o:$(LIB_DEPS) main.cpp pg-pathcomp.hpp
 	$(CXX) $(INCLUDE_FLAGS) $(CXXFLAGS) $(CPPFLAGS) -c main.cpp $(INC_FLAGS)
 
 bin/pg-pathcomp:$(LIB_DEPS) pg-pathcomp.o main.o
