@@ -4,6 +4,11 @@
 
 Retrieve basic statistics from a pan-genome graph (in GFA format) by comparing paths.  Coded as part of the [SV Biohackathon](https://github.com/collaborativebioinformatics/swagg)
 
+## Dependencies
+
+```
+sudo apt-get install build-essential git protobuf-compiler libprotoc-dev libhts-dev
+```
 ## Build
 
 ```

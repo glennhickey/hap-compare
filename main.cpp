@@ -6,15 +6,19 @@
 #include "sdsl/bit_vectors.hpp"
 #include "pg-pathcomp.hpp"
 #include "xg.hpp"
+#include "vg/vg.pb.h"
+#include "vg/io/stream.hpp"
 
 using namespace std;
 using namespace xg;
+using namespace vg;
 
 int main(int argc, char** argv) {
     args::ArgumentParser parser("pg-pathcomp: compuate matrix of pairwise distances of graph");
     args::HelpFlag help(parser, "help", "display this help menu", {'h', "help"});
     args::ValueFlag<std::string> gfa_in(parser, "FILE", "analyze the graph in this GFA file", {'g', "gfa-in"});
     args::ValueFlag<std::string> xg_in(parser, "FILE", "analyze the graph in this XG file", {'x', "xg-in"});
+    args::ValueFlag<std::string> snarls_in(parser, "FILE", "snarls made with vg view -Fv graph.vg | vg snarls", {'r', "snarls-in"});
     args::ValueFlag<std::string> base(parser, "BASE", "use this basename for temporary files during build from GFA", {'b', "base"});
     args::Flag validate(parser, "validate", "validate construction from GFA", {'V', "validate"});
     args::ValueFlag<uint64_t> num_threads(parser, "N", "use this many threads during parallel steps", {'t', "threads"});
@@ -51,6 +55,18 @@ int main(int argc, char** argv) {
                        args::get(base).empty() ? args::get(gfa_in) : args::get(base));
     }
 
+    // load the snarls into a map
+    map<handle_t, handle_t> snarl_map;
+    if (!args::get(snarls_in).empty()) {
+        std::ifstream in(args::get(snarls_in));
+        vg::io::for_each<Snarl>(in, [&](Snarl& snarl) {
+                handle_t start_handle = graph.get_handle(snarl.start().node_id(), snarl.start().backward());
+                handle_t end_handle = graph.get_handle(snarl.end().node_id(), snarl.end().backward());
+                snarl_map[start_handle] = end_handle;
+                snarl_map[graph.flip(end_handle)] = snarl_map[graph.flip(start_handle)];
+            });
+    }
+    
     cerr << "Computing Path Coverage" << endl;
     pair<vector<string>, vector<vector<float>>> path_comp = all_paths_jaccard(graph);
 
