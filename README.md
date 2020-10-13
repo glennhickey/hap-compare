@@ -8,6 +8,7 @@ Retrieve basic statistics from a pan-genome graph (in GFA format) by comparing p
 
 ```
 git clone https://github.com/glennhickey/pg-pathcomp.git --recursive
+cd pg-pathcomp
 make
 ```
 
