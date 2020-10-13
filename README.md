@@ -2,7 +2,7 @@
 
 ## Overview
 
-Retrieve basic statistics from a pan-genome graph (in GFA format) by comparing paths.  Coded as part of the [SV Biohackathon](https://github.com/collaborativebioinformatics/swagg)
+Retrieve basic statistics from a pan-genome graph (in GFA format) by comparing paths.  Hacked as part of the [SV Biohackathon](https://github.com/collaborativebioinformatics/swagg)
 
 ## Dependencies
 
@@ -23,6 +23,12 @@ make
 (from the `pg-pathcomp/` directory)
 ```
 . venv/bin/activate
-bin/pg-pathcomp graph.gfa > path-comp.tsv
-bin/plotHeatmap.py path-comp.tsv path-comp.pdf
+pg-pathcomp -g sars.gfa -m sars-comp.tsv
+plotHeatMap.py sars-comp.tsv sars-comp.pdf --log_scale
+```
+
+### Create Wiggle SV coverage on given reference path
+```
+vg view -Fv sars.gfa | vg snarls - > sars.snarls
+pg-pathcomp -g sars.gfa -r sars.snarls -p NC_045512 -u sars.NC_045512.wig -M 2
 ```
