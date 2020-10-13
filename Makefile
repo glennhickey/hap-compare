@@ -32,7 +32,7 @@ ifeq ($(shell uname -s),Darwin)
     endif
 endif
 
-CXXFLAGS := -O0 -Werror=return-type -std=c++14 -ggdb -g -MMD -MP $(PARALLEL_FLAGS) $(CXXFLAGS)
+CXXFLAGS := -O3 -Werror=return-type -std=c++14 -ggdb -g -MMD -MP $(PARALLEL_FLAGS) $(CXXFLAGS)
 
 XG_DIR = $(CWD)/deps/xg
 LIBVGIO_DIR = $(CWD)/deps/libvgio
@@ -56,6 +56,7 @@ $(LIB_DIR)/libxg.a: $(XG_DIR)/src/*.hpp $(XG_DIR)/src/*.cpp
 	+cp -r $(XG_DIR)/build/*prefix/src/*build/include/* $(INC_DIR)
 	+cp $(XG_DIR)/build/sdsl-lite-prefix/src/sdsl-lite-build/external/*/lib/*.a $(LIB_DIR)
 	+cp deps/xg/deps/*/src/*.hpp deps/xg/deps/args/*.hxx $(INC_DIR)
+	+cp $(XG_DIR)/bin/xg $(CWD)/bin
 
 $(LIB_DIR)/libvgio.a: $(LIBVGIO_DIR)/src/*.cpp
 	+mkdir -p include lib

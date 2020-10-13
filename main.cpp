@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     args::Flag validate(parser, "validate", "validate construction from GFA", {'V', "validate"});
     args::ValueFlag<uint64_t> num_threads(parser, "N", "use this many threads during parallel steps", {'t', "threads"});
     args::ValueFlag<uint64_t> min_sv_length(parser, "M", "min length for SV to be included in pileup [10]", {'M', "min-sv-len"});
-    args::ValueFlag<uint64_t> window_size(parser, "w", "window size for pileup [5]", {'w', "window-size"});
+    args::ValueFlag<uint64_t> window_size(parser, "w", "window size for pileup [1]", {'w', "window-size"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -55,9 +55,12 @@ int main(int argc, char** argv) {
     }
 
     size_t window = args::get(window_size);
-        if (!window) {
+    if (!window) {
         window = 5;
     }
+
+    // todo: we don't actually support window yet
+    window = 1;
 
     XG graph;
     if (!args::get(xg_in).empty()) {
@@ -104,17 +107,14 @@ int main(int argc, char** argv) {
         // print header row (columns are in same order)
         mat_file << ".";
         for (size_t i = 0; i < path_comp.first.size(); ++i) {
-            if (path_comp.first[i].substr(0, 4) != "HG01") continue;
             mat_file << "\t" << path_comp.first[i];
         }
         mat_file << endl;
 
         // print the matrix
         for (size_t i = 0; i < path_comp.second.size(); ++i) {
-            if (path_comp.first[i].substr(0, 4) != "HG01") continue;
             mat_file << path_comp.first[i];
             for (size_t j = 0; j < path_comp.second[i].size(); ++j) {
-                if (path_comp.first[j].substr(0, 4) != "HG01") continue;
                 mat_file << "\t" << path_comp.second[i][j];
             }
             mat_file << endl;

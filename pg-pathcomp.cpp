@@ -6,7 +6,8 @@
 #include "handlegraph/util.hpp"
 #include "vg/io/json2pb.h"
 
-#define debug
+//#define debug
+//#define debug1
 
 using namespace std;
 using namespace handlegraph;
@@ -132,7 +133,7 @@ vector<float> sv_pileup(const PathPositionHandleGraph& graph,
             if (graph.get_path_handle_of_step(path_travs.second[i].first) == ref_path_handle) {
                 assert(ref_trav_idx < 0);
                 ref_trav_idx = i;
-                for (step_handle_t ref_step = path_travs.second[i].first; ref_step != path_travs.second[i].first;
+                for (step_handle_t ref_step = path_travs.second[i].first; ref_step != graph.get_next_step(path_travs.second[i].second);
                      ref_step = graph.get_next_step(ref_step)) {
                     ref_handles.insert(graph.get_handle_of_step(ref_step));
                 }
@@ -141,13 +142,21 @@ vector<float> sv_pileup(const PathPositionHandleGraph& graph,
 
 #ifdef debug
         cerr << "found " << trav_lengths.size() << " traversals with refidx " << ref_trav_idx << " for snarl " << pb2json(snarl) << endl;
+
+        cerr << "the alt paths with different lengths are ";
+        for (int i = 0; i < trav_lengths.size(); ++i) {
+            if (trav_lengths[i] != trav_lengths[ref_trav_idx]) {
+                cerr << "i=" << i << ": " << trav_lengths[i] << " vs ref=" << trav_lengths[ref_trav_idx] << endl;
+            }
+        }
 #endif
 
         size_t ref_pos = start_pos + graph.get_length(start_handle);
 
         // process each alt traversal
         for (int i = 0; i < path_travs.second.size(); ++i) {
-            if (i != ref_trav_idx) {                
+            // todo: can remove this check to make more general
+            if (i != ref_trav_idx && trav_lengths[i] != trav_lengths[ref_trav_idx]) {                
                 process_alt(graph, ref_handles, path_travs.first[ref_trav_idx], ref_path_handle, ref_pos, path_travs.second[i], min_sv_len, pileup);
             }
         }
@@ -168,37 +177,57 @@ void process_alt(const PathPositionHandleGraph& graph,
                  vector<float>& ref_pileup) {
 
     bool on_ref = true;
+    bool prev_ref = false;
     step_handle_t prev_step;
     step_handle_t bubble_start;
 
     // hacky nested bubbles
     vector<pair<step_handle_t, step_handle_t>> bubbles;
 
-    for (step_handle_t alt_step = alt_traversal.first; alt_step != alt_traversal.second;
+#ifdef debug
+    cerr << "process alt on snarl with ref nodes ";
+    for (auto rh : ref_handles) {
+        cerr << graph.get_id(rh) << ", ";
+    }
+    cerr << endl;
+#endif
+    
+    for (step_handle_t alt_step = alt_traversal.first; alt_step != graph.get_next_step(alt_traversal.second);
          alt_step = graph.get_next_step(alt_step)) {
 
         handle_t handle = graph.get_handle_of_step(alt_step);
-        
+
         if (on_ref) {
             if (!ref_handles.count(handle)) {
+#ifdef debug
+                cerr << "leaving ref " << graph.get_id(handle) << endl;
+#endif
                 // starting new bubble
                 bubble_start = prev_step;
                 on_ref = false;
+            } else if (prev_ref) {
+                // ref-ref = deletion
+                bubbles.push_back(make_pair(prev_step, alt_step));                    
             }
+          prev_ref = true;
         } else {
             if (ref_handles.count(handle)) {
+#ifdef debug
+                cerr << "back on ref " << graph.get_id(handle) << endl;
+#endif
                 // finishing bubble
                 bubbles.push_back(make_pair(bubble_start, alt_step));
                 on_ref = true;
             }
+            prev_ref = false;
         }
-
+            
         prev_step = alt_step;
     }
 
     for (auto& bubble : bubbles) {
         size_t alt_length = 0;
-        for (step_handle_t alt_step = bubble.first; alt_step != bubble.second;
+        for (step_handle_t alt_step = bubble.first; alt_step != graph.get_next_step(bubble.second);
              alt_step = graph.get_next_step(alt_step)) {
             alt_length += graph.get_length(graph.get_handle_of_step(alt_step));
         }
@@ -220,9 +249,12 @@ void process_alt(const PathPositionHandleGraph& graph,
             }
         }
         ref_length = ref_end - ref_start + 1;
+#ifdef debug
+        cerr << "found bubble " << ref_start << " " << ref_end << " with alt length " << alt_length << endl;
+#endif
 
         if (ref_length >= alt_length + min_sv_len || alt_length >= ref_length + min_sv_len) {
-            for (size_t i = ref_start; i <= ref_length; ++i) {
+            for (size_t i = ref_start; i < ref_start + ref_length; ++i) {
                 ref_pileup[i] += 1;
             }
         }
@@ -348,7 +380,7 @@ pair<vector<SnarlTraversal>, vector<pair<step_handle_t, step_handle_t> > > find_
         end_path_handles.insert(graph.get_path_handle_of_step(step));
     }
 
-#ifdef debug
+#ifdef debug1
     cerr << "Finding traversals of " << pb2json(site) << " using PathTraversalFinder" << endl
          << " - there are " << start_steps.size() << " start_steps, " << end_steps.size() << " end_steps"
          << " and " << end_path_handles.size() << " end_path_handles" << endl;
@@ -366,7 +398,7 @@ pair<vector<SnarlTraversal>, vector<pair<step_handle_t, step_handle_t> > > find_
 
             handle_t end_check = end_handle;
 
-#ifdef debug
+#ifdef debug1
             cerr << " - considering path " << graph.get_path_name(start_path_handle) << endl;
 #endif
             // try to make a traversal by walking forward
@@ -392,7 +424,7 @@ pair<vector<SnarlTraversal>, vector<pair<step_handle_t, step_handle_t> > > find_
             }
 
             if (graph.get_handle_of_step(step) != end_check) {
-#ifdef debug
+#ifdef debug1
                 cerr << "     - failed to find forward traversal of path " << graph.get_path_name(start_path_handle) << endl;
 #endif
                 // try to make a traversal by walking backward
