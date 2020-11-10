@@ -1,7 +1,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "pg-pathcomp.hpp"
-#include "vg/vg.pb.h"
+#include "vg.pb.h"
 #include "handlegraph/handle_graph.hpp"
 #include "handlegraph/util.hpp"
 #include "vg/io/json2pb.h"

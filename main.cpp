@@ -6,7 +6,7 @@
 #include "sdsl/bit_vectors.hpp"
 #include "pg-pathcomp.hpp"
 #include "xg.hpp"
-#include "vg/vg.pb.h"
+#include "vg.pb.h"
 #include "vg/io/stream.hpp"
 
 using namespace std;

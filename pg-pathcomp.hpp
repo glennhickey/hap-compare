@@ -5,7 +5,7 @@
 #include "handlegraph/handle_graph.hpp"
 #include "handlegraph/path_handle_graph.hpp"
 #include "handlegraph/path_position_handle_graph.hpp"
-#include "vg/vg.pb.h"
+#include "vg.pb.h"
 #include "handlegraph/util.hpp"
 
 using namespace std;
