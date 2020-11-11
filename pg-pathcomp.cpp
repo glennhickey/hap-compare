@@ -462,3 +462,56 @@ pair<vector<SnarlTraversal>, vector<pair<step_handle_t, step_handle_t> > > find_
     
     return make_pair(out_travs, out_steps);
 }
+
+void print_path_coverage(const handlegraph::PathPositionHandleGraph& graph, const string& name_prefix) {
+    cout << "path-name" << "\t" << "pct-coverage" << "\t" << "max-gap" << "\t" << "avg-gap" << endl;
+    cout << "----------" << "\t" << "------------" << "\t" << "-------" << "\t" << "-------" << endl;
+
+    graph.for_each_path_handle([&](path_handle_t path_handle) {
+            string path_name = graph.get_path_name(path_handle);
+            if (path_name.substr(0, name_prefix.length()) == name_prefix) {
+                int64_t last_covered = -1;
+                int64_t total_covered = 0;
+                int64_t total_length = 0;
+                vector<int64_t> gaps;
+                graph.for_each_step_in_path(path_handle, [&](step_handle_t step_handle) {
+                        handle_t handle = graph.get_handle_of_step(step_handle);
+                        int64_t length = graph.get_length(handle);
+                        bool covered = false;
+                        graph.for_each_step_on_handle(handle, [&](step_handle_t step_handle_2) {
+                                path_handle_t path_handle_2 = graph.get_path_handle_of_step(step_handle_2);
+                                string path_name_2 = graph.get_path_name(path_handle_2);
+                                if (path_name_2.substr(0, name_prefix.length()) != name_prefix) {
+                                    covered = true;
+                                }
+                                return !covered;
+                            });
+                        total_length += length;
+                        if (covered) {
+                            total_covered += length;
+                            if (total_length - last_covered > 1) {
+                                gaps.push_back(total_length - last_covered - 1);
+                            }
+                            last_covered = length - 1;
+                        }
+                    });
+
+                if (total_length - last_covered > 1) {
+                    gaps.push_back(total_length - last_covered - 1);
+                }
+
+                int64_t max_gap = 0;
+                int64_t total_gap = 0;
+                for (int i = 0; i < gaps.size(); ++i) {
+                    max_gap = std::max(gaps[i], max_gap);
+                    total_gap += gaps[i];
+                }
+
+                cout << path_name << "\t"
+                    << ((float)total_covered / total_length) << "\t"
+                    << max_gap << "\t"
+                    << (total_gap / gaps.size()) << endl;
+            }   
+        });
+        
+}

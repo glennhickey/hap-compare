@@ -21,7 +21,8 @@ int main(int argc, char** argv) {
     args::ValueFlag<std::string> snarls_in(parser, "FILE", "snarls made with vg view -Fv graph.vg | vg snarls", {'r', "snarls-in"});
     args::ValueFlag<std::string> ref_path(parser, "NAME", "reference path name for SV pileup", {'p', "ref-path"});
     args::ValueFlag<std::string> mat_out(parser, "FILE", "write path similarity matrix to this file", {'m', "mat-out"});
-    args::ValueFlag<std::string> pileup_out(parser, "FILE", "write sv pileup (WIG format) to this file", {'u', "pileup-out}"}); 
+    args::ValueFlag<std::string> pileup_out(parser, "FILE", "write sv pileup (WIG format) to this file", {'u', "pileup-out}"});
+    args::ValueFlag<std::string> coverage_stats(parser, "NAME", "print coverage stats for given prefix", {'s', "coverage-stats"});
     args::ValueFlag<std::string> base(parser, "BASE", "use this basename for temporary files during build from GFA", {'b', "base"});
     args::Flag validate(parser, "validate", "validate construction from GFA", {'V', "validate"});
     args::ValueFlag<uint64_t> num_threads(parser, "N", "use this many threads during parallel steps", {'t', "threads"});
@@ -146,6 +147,10 @@ int main(int argc, char** argv) {
             pu_file << pileup[i] << "\n";
         }
         pu_file << endl;
+    }
+
+    if (!args::get(coverage_stats).empty()) {
+        print_path_coverage(graph, args::get(coverage_stats)); 
     }
     
     return 0;

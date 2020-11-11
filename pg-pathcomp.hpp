@@ -36,3 +36,6 @@ pair<vector<SnarlTraversal>, vector<pair<handlegraph::step_handle_t, handlegraph
 
 // get the traversal lengths
 vector<size_t> get_trav_lengths(const handlegraph::HandleGraph& graph, const vector<SnarlTraversal>& travs);
+
+// print path coverage stats for paths with given prefix
+void print_path_coverage(const handlegraph::PathPositionHandleGraph& graph, const string& name_prefix);
